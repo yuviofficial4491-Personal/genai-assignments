@@ -1,0 +1,231 @@
+{
+  "name": "Document Reviewer Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowFileUploads": true,
+          "allowedFilesMimeTypes": "application/pdf"
+        }
+      },
+      "id": "7f47b657-8c8d-4ad8-b959-e9408fa4a34b",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -144,
+        48
+      ],
+      "webhookId": "b726e45b-58ba-4c5f-83a2-649368f68e81"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab29e5d7-7d0e-45bd-a70e-779cb13df79c",
+              "leftValue": "={{ $json.files ? $json.files.length : 0 }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ddd960a7-5fbf-4a59-9a38-6d9af842e75d",
+      "name": "File Uploaded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "={{ $json.files[0].binaryKey }}",
+        "options": {}
+      },
+      "id": "49ed18f0-7621-41bb-9a37-641d011675c6",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"Document content:\\n\" + $(\"Extract from File\").item.json.text + \"\\n\\nUser question: \" + $(\"When chat message received\").item.json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "# System Prompt: Document QA Agent\n\n## Role\nYou are a Document Analyst. Answer questions strictly based on the uploaded document — no outside knowledge.\n\n## Rules\n1. Answer only from the document.\n2. Never hallucinate names, numbers, dates, or conclusions.\n3. Cite location: (Section X), (p. X), or (Paragraph X). If no markers exist, use (Introduction) etc.\n4. Stay objective — no opinions or speculation.\n\n## Handling\n- Multiple questions: answer each separately, re-grounded in the document.\n- Missing info: state plainly — never guess.\n- Partial answer: answer what you can, flag the rest as unsupported.\n- Minor ambiguity: state your assumption and proceed.\n- Major ambiguity: ask one clarifying question first.\n\n## Guardrails\n- No document uploaded → ask the user to upload a PDF.\n- Never fill in missing content."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "18a0b621-e39e-4ea7-bc8a-2e3624d79042",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        672,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "847f00ce-c420-46c9-a679-41a6ae792171",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        864,
+        256
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "rC6FN6G2K5tOS7Jz",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "# System Prompt: Document QA Agent\n\n## Role\nYou are a Document Analyst. Answer questions strictly based on the uploaded document — no outside knowledge.\n\n## Rules\n1. Answer only from the document.\n2. Never hallucinate names, numbers, dates, or conclusions.\n3. Cite location: (Section X), (p. X), or (Paragraph X). If no markers exist, use (Introduction) etc.\n4. Stay objective — no opinions or speculation.\n\n## Handling\n- Multiple questions: answer each separately, re-grounded in the document.\n- Missing info: state plainly — never guess.\n- Partial answer: answer what you can, flag the rest as unsupported.\n- Minor ambiguity: state your assumption and proceed.\n- Major ambiguity: ask one clarifying question first.\n\n## Guardrails\n- No document uploaded → ask the user to upload a PDF.\n- Never fill in missing content."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "79eb275c-6f1f-4667-b93c-e7d192772633",
+      "name": "Basic LLM Chain (No File)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        352,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "b3d9e961-f87f-40b4-a0a1-ed5858f43bfd",
+      "name": "Groq Chat Model (No File)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        704,
+        480
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "rC6FN6G2K5tOS7Jz",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "File Uploaded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Uploaded?": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain (No File)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model (No File)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain (No File)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "40de01af-fa4f-4f91-abe1-875d47e9937d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "28cb1737b174c151a55f1c266ef5167e4a3c408d395a2048864719530e94056b"
+  },
+  "nodeGroups": [],
+  "id": "qWE0kash0gQkyDpo",
+  "tags": []
+}
