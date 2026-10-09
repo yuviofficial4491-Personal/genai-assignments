@@ -1,0 +1,19 @@
+Prompt Provided in claude 
+
+this is my project package --- to this existing  project i would like to do following additions "Enhance the Existing Resume RAG Application
+
+Enhance the existing Resume RAG application by implementing the following features:
+
+Re-ranking of retrieved resumes
+Deduplication of repeated results
+Summarization of the final results
+Complete end-to-end pipeline integration
+Display all relevant results clearly on the UI
+Customize the application based on your organization’s branding, including:
+
+Organization name and logo
+Brand theme and colours
+Professional UI layout
+Responsive design
+Loading, success, validation, and error messages
+Any other relevant organization-specific enhancements "
